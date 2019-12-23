@@ -1,0 +1,41 @@
+svg {
+  font: 10px;
+  font-family:'Crimson Text', serif !important
+}
+
+
+.bar {
+  fill: steelblue;
+  clip-path: url(#clip);
+}
+
+.subBar {
+  fill: gray;
+  opacity: 0.5;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill: steelblue;
+  fill-opacity: .25;
+  shape-rendering: crispEdges;
+}
+
+.axes text{
+  text-anchor: end;
+  fill:#000;
+  fill-opacity:1;
+}
+
+.axes text.legend{
+  font-size:10px;
+  text-anchor:middle;
+  font-weight:bold;
+}
