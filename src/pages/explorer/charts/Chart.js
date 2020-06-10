@@ -127,10 +127,21 @@ const Chart = ({
   // THRESHOLD SCORE LOGIC
   //////////////////////////////////////////////////////////////////////////////
   const thresholdXIndex = useMemo( () => {
+    // Handle the increased dependency
+    if (direction === 'increased_dependency'){
+      let index = -1;
+      sortedSamples.forEach((sample, i) => {
+        if (scores[sample] > thresholdScore && index === -1){
+          index = i - 1;
+        }
+      });
+      return index === -1 ? null : sortedSamples[index];
+    }
+    // Handle the decreased dependency
     let index = -1;
-    sortedSamples.forEach((sample, i) => {
-      if (direction === 'increased_dependency' && scores[sample] > thresholdScore && index === -1){
-        index = i - 1;
+    [...sortedSamples].reverse().forEach((sample, i) => {
+      if (scores[sample] < thresholdScore && index === -1){
+        index = sortedSamples.length - (i - 1);
       }
     });
     return index === -1 ? null : sortedSamples[index];
@@ -224,9 +235,9 @@ const Chart = ({
 
    const sampleOpacity = useCallback((s) => {
      if (direction === 'increased_dependency'){
-       return scores[s] < thresholdScore ? 1 : 0.5
+       return scores[s] < thresholdScore ? 1 : 1;
      }
-     return scores[s] > thresholdScore ? 1 : 0.5
+     return scores[s] > thresholdScore ? 1 : 1;
    }, [scores, thresholdScore, direction]);
 
   //////////////////////////////////////////////////////////////////////////////

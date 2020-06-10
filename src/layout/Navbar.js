@@ -18,7 +18,7 @@ import {
 } from "react-router-dom"
 
 
-import {About, Credits, DataExplorer} from '../pages'
+import {About, Credits, DataExplorer, SuperDendrixResults} from '../pages'
 
 const useStyles = makeStyles(theme => ({
   appbar: {
@@ -59,6 +59,7 @@ const Navbar = ({
             <Grid item>
               <List component="nav" className={classes.navbar}>
                 <ListItem component="div"><ListItemText inset><Link to="/">Explorer</Link></ListItemText></ListItem>
+                <ListItem component="div"><ListItemText inset><Link to="/superdendrix-results">SuperDendrix</Link></ListItemText></ListItem>
                 <ListItem component="div"><ListItemText inset><Link to="/about">About</Link></ListItemText></ListItem>
                 <ListItem component="div"><ListItemText inset><Link to="/credits">Credits</Link></ListItemText></ListItem>
               </List>
@@ -74,7 +75,10 @@ const Navbar = ({
         <Route path="/credits">
           <Credits />
         </Route>
-        <Route path="/">
+        <Route path="/superdendrix-results">
+          <SuperDendrixResults />
+        </Route>
+        <Route path="/" exact>
           <DataExplorer />
         </Route>
       </Switch>
