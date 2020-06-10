@@ -10,8 +10,12 @@ import SortIcon from '../../../components/SortIcon.js'
 import {fromPairs} from 'lodash'
 
 const useStyles = makeStyles( theme => ({
-  multipleAlterations: { background: 'black' },
-  noAlterations: { background: 'lightgray' },
+  multipleAlterations: {
+    background: 'black',
+  },
+  noAlterations: {
+    background: 'lightgray',
+  },
 }))
 
 const AlterationsLegend = ({
@@ -47,43 +51,45 @@ const AlterationsLegend = ({
   ), [samples, sampleToAlterationCount])
 
   return (
-    <Grid container>
-      <Grid container>
+    <>
+      <Grid item container>
         <Typography variant="overline">Alterations</Typography>
         <SortIcon onChange={setAlterationsSortOrder} />
       </Grid>
-      <List dense={true}>
-        {
-          events.map( (event, i) => (
-            <ListItem key={event}>
-              <ListItemIcon>
-                <div style={{backgroundColor: eventColors[event]}} />
-              </ListItemIcon>
-              <ListItemText
-                primary={`${event} (${filterAlterationCount(Object.keys(alterations[event])).length})`}
-              />
-            </ListItem>
-          ))
-        }
-        <ListItem key={'multiple'}>
-          <ListItemIcon>
-            <div className={classes.multipleAlterations} />
-          </ListItemIcon>
-          <ListItemText
-            primary={`Multiple (${samplesWithMultipleAlterations.length})`}
-          />
-        </ListItem>
-        <ListItem key={'none'}>
-          <ListItemIcon className={classes.legendIcon}>
-            <div className={classes.noAlterations} />
-          </ListItemIcon>
-          <ListItemText
-            primary={`None (${samplesWithNoAlterations.length})`}
-          />
-        </ListItem>
-      </List>
-    </Grid>
-  )
+      <Grid item>
+        <List dense={true}>
+          {
+            events.map( (event, i) => (
+              <ListItem key={event}>
+                <ListItemIcon>
+                  <div style={{backgroundColor: eventColors[event]}} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={`${event} (${filterAlterationCount(Object.keys(alterations[event])).length})`}
+                />
+              </ListItem>
+            ))
+          }
+          <ListItem key={'multiple'}>
+            <ListItemIcon>
+              <div className={classes.multipleAlterations} />
+            </ListItemIcon>
+            <ListItemText
+              primary={`Multiple (${samplesWithMultipleAlterations.length})`}
+            />
+          </ListItem>
+          <ListItem key={'none'}>
+            <ListItemIcon className={classes.legendIcon}>
+              <div className={classes.noAlterations} />
+            </ListItemIcon>
+            <ListItemText
+              primary={`None (${samplesWithNoAlterations.length})`}
+            />
+          </ListItem>
+        </List>
+      </Grid>
+    </>
+  );
 }
 
 export default AlterationsLegend

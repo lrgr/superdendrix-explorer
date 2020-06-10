@@ -11,12 +11,15 @@ const useStyles = makeStyles(theme => ({
     paddingLeft: '15px !important',
     flexGrow: 1,
     flexShrink: 1,
+    minWidth: '0px',
+    overflowY: 'scroll',
   },
 }))
 
 const Explorer = ({
   alterationData,
   profileData,
+  samplesData,
   legend,
 }) => {
   const classes = useStyles()
@@ -25,23 +28,22 @@ const Explorer = ({
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Memos
-  const scoreData = useMemo( () => profileData && profileData.scores ? profileData.scores : {}, [profileData])
-  const scoreType = useMemo( () => scoreData.type ? scoreData.type : '', [scoreData])
-  const source = useMemo( () => scoreData.source ? scoreData.source : '', [scoreData])
-  const target = useMemo( () => scoreData.target ? scoreData.target : '', [scoreData])
-  const scores = useMemo( () => scoreData.scores ? scoreData.scores : {}, [scoreData])
-  const sampleToTissue = useMemo( () => profileData.sampleToTissue ? profileData.sampleToTissue : {}, [profileData])
+  const scores = useMemo( () => profileData && profileData.scores ? profileData.scores : {}, [profileData]);
+  const profileName = useMemo(() => profileData.profileName ? profileData.profileName : '', [profileData]);
+  const direction = useMemo(() => profileData.direction ? profileData.direction : '', [profileData]);
+  const thresholdScore = useMemo(() => profileData.thresholdScore ? profileData.thresholdScore : -1, [profileData]);
   const alterations = useMemo( () => alterationData && alterationData.alterations ? alterationData.alterations : {}, [alterationData])
-  const sampleToAlterationCount = useMemo( () => alterationData && alterationData.sampleToAlterationCount ? alterationData.sampleToAlterationCount : {}, [alterationData])
+  const sampleToTissue = useMemo( () => samplesData.sampleToTissue ? samplesData.sampleToTissue : {}, [samplesData])
+  const sampleToAlterationCount = useMemo( () => samplesData && samplesData.sampleToAlterationCount ? samplesData.sampleToAlterationCount : {}, [samplesData])
 
   // Render
   return (
-    <Grid id="Explorer" xs item className={classes.chart}>
+    <Grid id="Explorer" item className={classes.chart}>
       <Grid container justify="space-between" direction="row">
-        <Grid item xs={1}>
+        <Grid item>
           <Typography variant="h5">Explorer</Typography>
         </Grid>
-        <Grid item xs={1}>
+        <Grid item>
           <Button onClick={() => setDrawerOpen(true)}>View Data</Button>
         </Grid>
       </Grid>
@@ -50,10 +52,10 @@ const Explorer = ({
           alterations={alterations}
           sampleToAlterationCount={sampleToAlterationCount}
           scores={scores}
-          scoreType={scoreType}
           sampleToTissue={sampleToTissue}
-          target={target}
-          source={source}
+          profileName={profileName}
+          thresholdScore={thresholdScore}
+          direction={direction}
           legend={legend}
         />
       </Grid>

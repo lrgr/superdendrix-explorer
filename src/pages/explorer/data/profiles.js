@@ -1,135 +1,69 @@
-import React, {useState, useEffect} from 'react'
-import {json as d3Json} from 'd3-fetch'
-import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
-import TextField from '@material-ui/core/TextField'
-import Autocomplete from '@material-ui/lab/Autocomplete'
-import FormControl from '@material-ui/core/FormControl'
-import Select from '@material-ui/core/Select'
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import {ListboxComponent} from '../../../helpers.js'
+import React, {useState, useEffect} from 'react';
+import {json as d3Json} from 'd3-fetch';
+import Grid from '@material-ui/core/Grid';
+import TextField from '@material-ui/core/TextField';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import FormControl from '@material-ui/core/FormControl';
+import {ListboxComponent} from '../../../helpers.js';
 
 const ProfileSelect = ({
-  urls,
+  selectedDataset,
   setPayload,
   initType,
   initSource,
-  initTarget,
+  initProfile,
 }) => {
   // Constants
-  const sources = urls === null ? [] : Object.keys(urls)
+  const urlPrefix = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${selectedDataset}/profiles`;
 
   // State and refs
-  const [source, setSource] = useState('')
-  const [scoreTypes, setScoreTypes] = useState([]) // type is a reserved word
-  const [scoreType, setScoreType] = useState('')
-  const [targets, setTargets] = useState([])
-  const [target, setTarget] = useState('')
-
-  const [urlPath, setURLPath] = useState(null)
-  const [samples, setSamples] = useState([])
-  const [sampleToTissue, setSampleToTissue] = useState({})
+  const [profileNames, setProfileNames] = useState([]);
+  const [selectedProfile, setSelectedProfile] = useState('');
 
   // Effects
   useEffect( () => {
-    // Sanity checking
-    if (sources.length === 0 || source === '') return
-
     // Fetch the profile data
-    const scoreDataURL = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${urls[source]}`
+    const scoreDataURL = `${urlPrefix}/manifest.json`;
     d3Json(scoreDataURL)
       .then((jsonData) => {
-        setScoreTypes(jsonData.profile_types)
-        setTargets(jsonData.profile_names)
-        setURLPath(jsonData.profile_path)
-        setSampleToTissue(jsonData.cellLineToTissue)
-        setSamples(jsonData.cell_lines)
+        setProfileNames(jsonData.profiles)
 
-        if (initType !== '') setScoreType(initType)
-        if (initTarget !== '') setTarget(initTarget)
-        if (initSource !== '') setSource(initSource)
+        if (initProfile) setSelectedProfile(initProfile)
       })
       .catch((error) => {
         console.error(error)
       })
 
-  }, [source, urls, sources.length])
+  }, [urlPrefix, initType, initProfile]);
 
   useEffect( () => {
-    if (sources.length > 0){
-      setSource(sources[0])
-    }
-  }, [sources])
-
-  useEffect( () => {
-    if (scoreTypes.length > 0){
-      setScoreType(scoreTypes[0])
-    }
-  }, [scoreTypes])
-
-  useEffect( () => {
-    if (!target || target === '' || urlPath === null) return
-    const scoreURL = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${urlPath}/${target.toLowerCase()}.json`
+    if (!selectedProfile || selectedProfile === '') return
+    const scoreURL = `${urlPrefix}/${selectedProfile}.json`;
     d3Json(scoreURL)
       .then((jsonData) => {
         setPayload({
-          sampleToTissue: sampleToTissue,
-          scores: {
-            source: source,
-            type: scoreType,
-            target: target,
-            samples: samples,
-            scores: jsonData.profile[scoreType],
-          },
-        })
+          profileName: selectedProfile,
+          scores: jsonData.scores,
+          thresholdScore: jsonData.thresholdScore,
+          direction: jsonData.direction,
+        });
       }).catch( (error) => {
-        console.error(error)
-      })
+        console.error(error);
+      });
 
-  }, [source, scoreType, target, urlPath, sampleToTissue])
+  }, [urlPrefix, setPayload, selectedProfile]);
 
   // Render
   return (
     <Grid container item direction="column">
-      <Typography variant="overline">Scores</Typography>
-      <FormControl fullWidth>
-        <InputLabel>Source</InputLabel>
-        <Select
-          id="scoreSource"
-          value={source}
-          onChange={event => setSource(event.target.value)}
-        >
-          {
-            sources.map( (t,i) =>
-              <MenuItem key={i} value={t}>{t}</MenuItem>
-            )
-          }
-        </Select>
-      </FormControl>
-      <FormControl fullWidth>
-        <InputLabel>Type</InputLabel>
-        <Select
-          id="scoreType"
-          value={scoreType}
-          onChange={ event => setScoreType(event.target.value) }
-          fullWidth
-        >
-          {
-            scoreTypes.map( (t, i) =>
-              <MenuItem key={i} value={t}>{t}</MenuItem>
-            )
-          }
-        </Select>
-      </FormControl>
       <FormControl fullWidth>
         <Autocomplete
           id="scoreTarget"
           ListboxComponent={ListboxComponent}
-          value={target}
-          options={targets}
+          value={selectedProfile}
+          options={profileNames}
           getOptionLabel={ d => d }
-          onChange={ (event, value) => setTarget(value) }
+          onChange={ (event, value) => setSelectedProfile(value) }
           renderInput={params => (
             <TextField {...params} variant="standard" margin="normal" label="Target" fullWidth  />
           )}

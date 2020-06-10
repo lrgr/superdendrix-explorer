@@ -25,28 +25,30 @@ const TissuesLegend = ({
 
   //
   return (
-    <Grid container>
-      <Grid container>
+    <>
+      <Grid item container>
         <Typography variant="overline">Tissue Types</Typography>
         <SortIcon onChange={setTissuesSortOrder} />
       </Grid>
-      <List dense={true}>
-        {
-          tissues.map( tissue => {
-            return (
-              <ListItem key={tissue}>
-                <ListItemIcon>
-                  <div style={{backgroundColor: tissueColors[tissue]}} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={`${tissue.split('_').join(' ')} (${tissueToSamples[tissue].length})`}
-                />
-              </ListItem>
-            )
-          })
-        }
-      </List>
-    </Grid>
+      <Grid item style={{ flexGrow: 1, flexShrink: 1, overflowY: 'scroll' }}>
+        <List dense={true}>
+          {
+            tissues.map( tissue => {
+              return (
+                <ListItem key={tissue}>
+                  <ListItemIcon>
+                    <div style={{backgroundColor: tissueColors[tissue]}} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={`${tissue.split('_').join(' ')} (${tissueToSamples[tissue].length})`}
+                  />
+                </ListItem>
+              )
+            })
+          }
+        </List>
+      </Grid>
+    </>
   )
 }
 

@@ -10,14 +10,16 @@ import Popover from '@material-ui/core/Popover'
 
 const useStyles = makeStyles(theme => ({
   popover: {
-    width: '300px',
-    height: '150px',
     padding: '5px',
+    '& .MuiTableCell-root': {
+      padding: '0px 5px 0px 5px',
+      fontSize: '10px',
+    },
   },
 }));
 
 const AlterationTooltip = ({
-  anchorEl,
+  anchorPosition,
   sample,
   score,
   tissue,
@@ -25,19 +27,20 @@ const AlterationTooltip = ({
   alterations,
   onMouseLeave,
 }) => {
-  const classes = useStyles()
+  const classes = useStyles();
 
   return (
     <Popover
-      style={{pointerEvents: 'none', height: `250px`, width: '300px'}}
+      style={{ pointerEvents: 'none' }}
       disableRestoreFocus
       className={classes.popover}
-      open={Boolean(anchorEl)}
-      anchorEl={anchorEl}
+      open={anchorPosition.open}
+      anchorReference="anchorPosition"
+      anchorPosition={{ top: anchorPosition.top, left: anchorPosition.left }}
       onClose={onMouseLeave}
       transitionDuration={0}
       anchorOrigin={{
-        vertical: 'bottom',
+        vertical: 'center',
         horizontal: 'center',
       }}
       transformOrigin={{
@@ -59,7 +62,7 @@ const AlterationTooltip = ({
               <TableCell>{tissue}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell><b>Alteration Count</b></TableCell>
+              <TableCell><b>Non-Silent Mutations</b></TableCell>
               <TableCell>{alterationCount}</TableCell>
             </TableRow>
             <TableRow>
@@ -68,7 +71,13 @@ const AlterationTooltip = ({
             </TableRow>
             <TableRow>
               <TableCell><b>Alterations</b></TableCell>
-              <TableCell align="left">{alterations.join(', ')}</TableCell>
+              <TableCell align="left">
+                {
+                  alterations.map(({ alteration, proteinChanges}) => (
+                    `${alteration} (${proteinChanges.join(', ')})`
+                  )).join(', ')
+                }
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>

@@ -23,15 +23,15 @@ const Chart = ({
   sampleToAlterationCount,
   sampleToTissue,
   scores,
-  scoreType,
-  target,
-  source,
+  profileName,
+  thresholdScore,
+  direction,
   legend,
 }) => {
   // State and refs
   const [containerWidth, setContainerWidth] = useState(500)
   const [visibleSamples, setVisibleSamples] = useState([])
-  const [anchorEl, setAnchorEl] = useState(null)
+  const [anchorPosition, setAnchorPosition] = useState({ top: 0, left: 0, open: false });
   const [highlightedSample, setHighlightedSample] = useState(null)
 
   const barEl = useRef(null)
@@ -56,7 +56,7 @@ const Chart = ({
         [e, new Set(Object.keys(alterations[e]))]
       ))
     )
-  ), [alterations])
+  ), [alterations]);
 
   const sampleToAlterations = useMemo( () => (
     fromPairs(
@@ -64,7 +64,7 @@ const Chart = ({
         [ s, events.filter(e => alterationMap[e].has(s)) ]
       ))
     )
-  ), [alterationMap, samples, events])
+  ), [alterationMap, samples, events]);
 
   const sortedSamples = useMemo( () => {
     // If we don't have any sort information, then we just do ascending by score
@@ -118,10 +118,35 @@ const Chart = ({
 
   const barXScale = useMemo( () => {
     return scaleBand().domain(visibleSamples).range([0, width]).paddingInner(paddingInner)
-  }, [visibleSamples, width])
+  }, [visibleSamples, width]);
   const barYScale = useMemo( () => (
     scaleLinear().domain(extent(values)).range([barHeight, 0])
-  ), [values, barHeight])
+  ), [values, barHeight]);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // THRESHOLD SCORE LOGIC
+  //////////////////////////////////////////////////////////////////////////////
+  const thresholdXIndex = useMemo( () => {
+    let index = -1;
+    sortedSamples.forEach((sample, i) => {
+      if (direction === 'increased_dependency' && scores[sample] > thresholdScore && index === -1){
+        index = i - 1;
+      }
+    });
+    return index === -1 ? null : sortedSamples[index];
+  }, [direction, scores, sortedSamples, thresholdScore]);
+
+  const thresholdOpacity = useMemo(() => {
+    if (thresholdXIndex === null) return 0;
+    if (legend.sort){
+      if (legend.sort.alterations !== 'NO_SORT' || legend.sort.tissues !== 'NO_SORT'){
+        return 0;
+      }
+    } else {
+      return 0.2
+    }
+    return 1;
+  }, [thresholdScore, legend.sort]);
 
   //////////////////////////////////////////////////////////////////////////////
   // EFFECTS
@@ -181,10 +206,11 @@ const Chart = ({
    // EVENT HANDLERS
    //////////////////////////////////////////////////////////////////////////////
    const handleMouseEnter = (event, sample) => {
-     setAnchorEl(event.currentTarget)
-     setHighlightedSample(sample)
+     const { x, y} = event.nativeEvent;
+     setAnchorPosition({ top: y + 10, left: x, open: true });
+     setHighlightedSample(sample);
    }
-   const handleMouseLeave = () => setAnchorEl(null)
+   const handleMouseLeave = () => setAnchorPosition({ top: 0, left: 0, open: false });
 
    //////////////////////////////////////////////////////////////////////////////
    // HELPERS
@@ -194,7 +220,14 @@ const Chart = ({
      if (sampleAlterations.length === 0) return 'lightgray'
      else if (sampleAlterations.length > 1) return 'black'
      else return legend.eventColors[sampleAlterations[0]]
-   }, [legend, sampleToAlterations])
+   }, [legend, sampleToAlterations]);
+
+   const sampleOpacity = useCallback((s) => {
+     if (direction === 'increased_dependency'){
+       return scores[s] < thresholdScore ? 1 : 0.5
+     }
+     return scores[s] > thresholdScore ? 1 : 0.5
+   }, [scores, thresholdScore, direction]);
 
   //////////////////////////////////////////////////////////////////////////////
   // RENDER
@@ -253,10 +286,21 @@ const Chart = ({
         <g className="axes">
           <g transform={`translate(${margin.left-5}, ${margin.top})`} ref={barLeftAxisEl}></g>
           <g transform={`translate(40,${margin.top+(barHeight/2)}) rotate(-90)`}>
-            <text x="0" y="0" className="legend" style={{fontSize: '14px'}}>{scoreType} ({target})</text>
+            <text x="0" y="0" className="legend" style={{fontSize: '14px'}}>{profileName} (2C)</text>
           </g>
         </g>
         <g transform={`translate(${margin.left}, ${margin.top})`}>
+          <line
+            id="thresholdScore"
+            x1={thresholdXIndex !== null ? barXScale(thresholdXIndex) : 0}
+            y1={0}
+            x2={thresholdXIndex !== null ? barXScale(thresholdXIndex) : 0}
+            y2={barHeight}
+            stroke="green"
+            strokeWidth="2px"
+            strokeDasharray="4"
+            opacity={thresholdOpacity}
+          />
           <g id="Bars">
             {
               visibleSamples.map( s => (
@@ -266,7 +310,7 @@ const Chart = ({
                   y={barYScale(Math.max(0, scores[s]))}
                   width={barXScale.bandwidth()}
                   height={Math.abs(barYScale(scores[s]) - barYScale(0))}
-                  fillOpacity={scores[s] < -1 ? 1 : 0.5}
+                  fillOpacity={sampleOpacity(s)}
                   fill={sampleFill(s)}
                   onMouseEnter={(e) => handleMouseEnter(e, s)}
                   onMouseLeave={handleMouseLeave}
@@ -276,16 +320,29 @@ const Chart = ({
           </g>
         </g>
       </svg>
+      <Grid container direction="column">
+        <Grid item>
+          <b>Direction</b>: { direction === 'increased_dependency' ? 'Increased' : 'Decreased' } Dependency
+        </Grid>
+        <Grid item>
+          <b>Score equivalent to CERES essential</b>: { thresholdScore.toFixed(2) }
+        </Grid>
+      </Grid>
         {
           highlightedSample !== null &&
           <AlterationTooltip
-            anchorEl={anchorEl}
+            anchorPosition={anchorPosition}
             onMouseLeave={handleMouseLeave}
             sample={highlightedSample}
             tissue={sampleToTissue[highlightedSample]}
             score={scores[highlightedSample]}
             alterationCount={sampleToAlterationCount[highlightedSample]}
-            alterations={sampleToAlterations[highlightedSample]}
+            alterations={
+              sampleToAlterations[highlightedSample].map((d) => ({
+                alteration: d,
+                proteinChanges: alterations[d][highlightedSample],
+              }))
+            }
           />
         }
     </Grid>

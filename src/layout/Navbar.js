@@ -53,7 +53,7 @@ const Navbar = ({
           <Grid container justify="space-between" direction="row" alignItems="center">
             <Grid item>
               <Typography variant="h6" className={classes.title}>
-                SuperDendrix Data Explorer
+                SuperDendrix Explorer
               </Typography>
             </Grid>
             <Grid item>

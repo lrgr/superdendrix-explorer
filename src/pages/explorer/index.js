@@ -20,35 +20,45 @@ const DataExplorer = withRouter(({
   history,
 }) => {
   // Constants
-  const classes = useStyles()
-  const dataURL = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/data/superdendrix-data.json`
+  const classes = useStyles();
+  const dataURL = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/manifest.json`;
 
   // State
-  const [profileURLs, setProfileURLs] = useState({})
-  const [sampleLists, setSampleLists] = useState({})
   const [legend, setLegend] = useState({})
-  const [eventsURLs, setEventsURLs] = useState(null)
+  const [datasets, setDatasets] = useState([]);
+  const [selectedDataset, setSelectedDataset] = useState('19Q1');
   const [profileData, setProfileData] = useState({})
+  const [samplesData, setSamplesData] = useState({
+    samples: [],
+    sampleToTissue: {},
+    sampleToEssentialScore: {},
+    sampleToAlterationCount: {},
+  })
   const [alterationData, setAlterationData] = useState({})
   const [initValues, setInitValues] = useState({})
 
   // Memo
-  const payload = useMemo( () => (
-    { profileData, alterationData, legend }
-  ), [profileData, alterationData, legend])
+  const payload = useMemo( () => ({
+    profileData,
+    alterationData,
+    samplesData,
+    legend,
+  }), [profileData, alterationData, samplesData, legend]);
 
   // Effects
   useEffect( () => {
     d3Json(dataURL)
-      .then((jsonData) => {
-        setProfileURLs(jsonData.profile_datasets)
-        setEventsURLs(jsonData.events)
-        setSampleLists(jsonData.sample_lists)
-      })
+      .then(({ datasets }) => setDatasets(datasets))
       .catch((error) => {
         console.error(error)
       })
-  }, [dataURL])
+  }, [dataURL]);
+
+  useEffect(() => {
+    if (datasets.length > 0){
+      setSelectedDataset(datasets[0])
+    }
+  }, [datasets]);
 
   useEffect( () => {
     if (!profileData.scores || !alterationData.alterations) return
@@ -56,25 +66,27 @@ const DataExplorer = withRouter(({
       pathname: '/',
       search: queryString.stringify({
         alterations: Object.keys(alterationData.alterations).sort(ascending),
-        profileSource: profileData.scores.source,
-        profileType: profileData.scores.type,
-        profileTarget: profileData.scores.target,
+        profileName: profileData.profileName,
       })
     })
-  }, [profileData, alterationData])
+  }, [profileData, alterationData]);
 
   useEffect( () => {
     setInitValues(queryString.parse(location.search))
-  }, [])
+  }, []);
 
   // Render
+
   return (
-    <Grid container className={classes.dataExplorer}>
+    <Grid container className={classes.dataExplorer} style={{ height: 'calc(100% - 64px)' }}>
       <DataSelect
-        urls={{scores: profileURLs, events: eventsURLs }}
         initValues={initValues}
         setProfileData={setProfileData}
         setAlterationData={setAlterationData}
+        setSamplesData={setSamplesData}
+        selectedDataset={selectedDataset}
+        setSelectedDataset={setSelectedDataset}
+        datasets={datasets}
       />
       <Explorer {...payload} legend={legend} />
       <Legend {...payload} setLegend={setLegend} />
