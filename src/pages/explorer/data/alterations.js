@@ -10,31 +10,32 @@ import {ListboxComponent} from '../../../helpers.js';
 const AlterationsSelect = ({
   selectedDataset,
   setPayload,
-  initAlterations,
+  selectedAlterations,
+  setSelectedAlterations,
 }) => {
   // URL prefix
   const urlPrefix = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${selectedDataset}/genes`;
 
   // State
-  const [selectedAlterations, setSelectedAlterations] = useState([])
-  const [alterations, setAlterations] = useState([])
-  const [alterationPayload, setAlterationPayload] = useState({})
+  const [alterations, setAlterations] = useState([]);
+  const [alterationPayload, setAlterationPayload] = useState({});
 
   // Effects
   useEffect( () => {
-    const alterationsManifestURL = `${urlPrefix}/manifest.json`
-    d3Json(alterationsManifestURL)
-      .then((jsonData) => {
-        setAlterations(jsonData.alterations);
-        if (initAlterations) setSelectedAlterations(initAlterations)
-      }).catch( (error) => {
-        console.error(error);
-      })
-  }, [initAlterations, urlPrefix]);
+    if (selectedDataset !== null){
+      const alterationsManifestURL = `${urlPrefix}/manifest.json`;
+      d3Json(alterationsManifestURL)
+        .then((jsonData) => {
+          setAlterations(jsonData.alterations);
+        }).catch( (error) => {
+          console.error(error);
+        });
+    }
+  }, [selectedDataset, selectedAlterations, urlPrefix]);
 
   // Fetch the data and add it to state
   useEffect( () => {
-    if (!selectedAlterations) return
+    if (!selectedAlterations) return;
     Promise.all(
       selectedAlterations.map( alteration => d3Json(`${urlPrefix}/${alteration}.json`)),
     )
@@ -55,7 +56,6 @@ const AlterationsSelect = ({
     setPayload(alterationPayload);
   }, [alterationPayload, setPayload]);
 
-
   // Render
   return (
     <Grid container item direction="column">
@@ -74,7 +74,7 @@ const AlterationsSelect = ({
         />
       </FormControl>
     </Grid>
-  )
-}
+  );
+};
 
-export default AlterationsSelect
+export default AlterationsSelect;

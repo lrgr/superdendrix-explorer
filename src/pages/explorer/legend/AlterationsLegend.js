@@ -1,13 +1,13 @@
-import React, {useState, useMemo, useCallback} from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
-import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
-import ListItemText from '@material-ui/core/ListItemText'
-import ListItemIcon from '@material-ui/core/ListItemIcon'
-import SortIcon from '../../../components/SortIcon.js'
-import {fromPairs} from 'lodash'
+import React, { useMemo, useCallback } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
+import Typography from '@material-ui/core/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import SortIcon from '../../../components/SortIcon.js';
+import {fromPairs} from 'lodash';
 
 const useStyles = makeStyles( theme => ({
   multipleAlterations: {
@@ -16,7 +16,7 @@ const useStyles = makeStyles( theme => ({
   noAlterations: {
     background: 'lightgray',
   },
-}))
+}));
 
 const AlterationsLegend = ({
   samples,
@@ -25,30 +25,30 @@ const AlterationsLegend = ({
   alterations,
   setAlterationsSortOrder,
 }) => {
-  const classes = useStyles()
+  const classes = useStyles();
   const sampleToAlterationCount = useMemo( () => {
-    const counter = fromPairs(samples.map( s => [s, 0]))
+    const counter = fromPairs(samples.map( s => [s, 0]));
     events.forEach( event => {
       Object.keys(alterations[event]).forEach( sample => {
         counter[sample] += 1
       })
-    })
-    return counter
-  }, [events, samples, alterations])
+    });
+    return counter;
+  }, [events, samples, alterations]);
 
-  const sampleSet = useMemo( () => new Set(samples), [samples])
+  const sampleSet = useMemo( () => new Set(samples), [samples]);
 
   const filterAlterationCount = useCallback( (alteredSamples) => (
     alteredSamples.filter( s => sampleSet.has(s) && sampleToAlterationCount[s] === 1 )
-  ), [sampleSet, sampleToAlterationCount])
+  ), [sampleSet, sampleToAlterationCount]);
 
   const samplesWithMultipleAlterations = useMemo( () => (
     samples.filter( s => sampleToAlterationCount[s] > 1)
-  ), [samples, sampleToAlterationCount])
+  ), [samples, sampleToAlterationCount]);
 
   const samplesWithNoAlterations = useMemo( () => (
     samples.filter( s => sampleToAlterationCount[s] === 0)
-  ), [samples, sampleToAlterationCount])
+  ), [samples, sampleToAlterationCount]);
 
   return (
     <>
@@ -90,6 +90,6 @@ const AlterationsLegend = ({
       </Grid>
     </>
   );
-}
+};
 
-export default AlterationsLegend
+export default AlterationsLegend;

@@ -1,24 +1,22 @@
-import React, {useState} from 'react'
-import PropTypes from 'prop-types';
-import Drawer from '@material-ui/core/Drawer'
-import CssBaseline from '@material-ui/core/CssBaseline'
-import AppBar from '@material-ui/core/AppBar'
-import Toolbar from '@material-ui/core/Toolbar'
-import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
-import { makeStyles } from '@material-ui/core/styles'
-import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
-import ListItemText from '@material-ui/core/ListItemText'
+import React from 'react';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Grid from '@material-ui/core/Grid';
+import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/core/styles';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
-} from "react-router-dom"
+  Link,
+} from "react-router-dom";
 
 
-import {About, Credits, DataExplorer, SuperDendrixResults} from '../pages'
+import { About, Credits, DataExplorer, SuperDendrixResults } from '../pages';
 
 const useStyles = makeStyles(theme => ({
   appbar: {
@@ -38,13 +36,10 @@ const useStyles = makeStyles(theme => ({
       textDecoration: 'underline',
     },
   },
-}))
+}));
 
-const Navbar = ({
-  styles,
-  css,
-}) => {
-  const classes = useStyles()
+const Navbar = () => {
+  const classes = useStyles();
   return (
     <Router>
       <CssBaseline />
@@ -83,7 +78,7 @@ const Navbar = ({
         </Route>
       </Switch>
     </Router>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

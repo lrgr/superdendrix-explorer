@@ -8,36 +8,33 @@ import {ListboxComponent} from '../../../helpers.js';
 
 const ProfileSelect = ({
   selectedDataset,
+  selectedProfile,
+  setSelectedProfile,
   setPayload,
-  initType,
-  initSource,
-  initProfile,
 }) => {
   // Constants
   const urlPrefix = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${selectedDataset}/profiles`;
 
   // State and refs
   const [profileNames, setProfileNames] = useState([]);
-  const [selectedProfile, setSelectedProfile] = useState('');
 
   // Effects
   useEffect( () => {
     // Fetch the profile data
+    if (!selectedDataset) return;
     const scoreDataURL = `${urlPrefix}/manifest.json`;
     d3Json(scoreDataURL)
       .then((jsonData) => {
-        setProfileNames(jsonData.profiles)
-
-        if (initProfile) setSelectedProfile(initProfile)
+        setProfileNames(jsonData.profiles);
       })
       .catch((error) => {
-        console.error(error)
-      })
+        console.error(error);
+      });
 
-  }, [urlPrefix, initType, initProfile]);
+  }, [urlPrefix, selectedProfile, setSelectedProfile, selectedDataset]);
 
   useEffect( () => {
-    if (!selectedProfile || selectedProfile === '') return
+    if (!selectedProfile || selectedProfile === '') return;
     const scoreURL = `${urlPrefix}/${selectedProfile}.json`;
     d3Json(scoreURL)
       .then((jsonData) => {

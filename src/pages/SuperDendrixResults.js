@@ -55,7 +55,7 @@ const SuperDendrixResults = withRouter(({
             <InputLabel id="dataset-select">Dataset</InputLabel>
             <Select
               labelId="dataset-select"
-              value={selectedDataset}
+              value={datasets.includes(selectedDataset) ? selectedDataset : ''}
               onChange={(e) => setSelectedDataset(e.target.value)}
             >
             {
@@ -102,6 +102,7 @@ const SuperDendrixResults = withRouter(({
                         search: queryString.stringify({
                           alterations: alterations.sort(ascending),
                           profileName: profile,
+                          dataset: selectedDataset,
                         })
                       })
                     }}

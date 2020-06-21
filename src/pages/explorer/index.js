@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import {withRouter} from 'react-router'
-import {ascending} from 'd3-array'
-import {json as d3Json} from 'd3-fetch'
+import React, { useState, useEffect, useMemo } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import { withRouter } from 'react-router';
+import { ascending } from 'd3-array';
+import { json as d3Json } from 'd3-fetch';
 import Grid from '@material-ui/core/Grid';
-import queryString from 'query-string'
-import DataSelect from './data/index.js'
-import Explorer from './charts/index.js'
-import Legend from './legend/index.js'
+import queryString from 'query-string';
+import DataSelect from './data/index.js';
+import Explorer from './charts/index.js';
+import Legend from './legend/index.js';
 
 const useStyles = makeStyles(theme => ({
   dataExplorer: {
     flexWrap: 'nowrap',
   }
-}))
+}));
 
 const DataExplorer = withRouter(({
   location,
@@ -26,16 +26,18 @@ const DataExplorer = withRouter(({
   // State
   const [legend, setLegend] = useState({})
   const [datasets, setDatasets] = useState([]);
-  const [selectedDataset, setSelectedDataset] = useState('19Q1');
-  const [profileData, setProfileData] = useState({})
+  const [profileData, setProfileData] = useState({});
   const [samplesData, setSamplesData] = useState({
     samples: [],
     sampleToTissue: {},
     sampleToEssentialScore: {},
     sampleToAlterationCount: {},
-  })
-  const [alterationData, setAlterationData] = useState({})
-  const [initValues, setInitValues] = useState({})
+  });
+  const [alterationData, setAlterationData] = useState({});
+
+  const [selectedDataset, setSelectedDataset] = useState('19Q1');
+  const [selectedProfile, setSelectedProfile] = useState('BRAF');
+  const [selectedAlterations, setSelectedAlterations] = useState(['BRAF_A']);
 
   // Memo
   const payload = useMemo( () => ({
@@ -54,38 +56,61 @@ const DataExplorer = withRouter(({
       })
   }, [dataURL]);
 
-  useEffect(() => {
-    if (datasets.length > 0){
-      setSelectedDataset(datasets[0])
+  useEffect( () => {
+    const newSearch = queryString.stringify({
+      alterations: selectedAlterations.sort(ascending),
+      profileName: selectedProfile,
+      dataset: selectedDataset,
+    });
+    if (newSearch !== location.search){
+      history.push({
+        pathname: '/',
+        search: newSearch,
+      });
     }
-  }, [datasets]);
+  }, [selectedProfile, selectedAlterations, selectedDataset, location.search, history]);
 
   useEffect( () => {
-    if (!profileData.scores || !alterationData.alterations) return
-    history.push({
-      pathname: '/',
-      search: queryString.stringify({
-        alterations: Object.keys(alterationData.alterations).sort(ascending),
-        profileName: profileData.profileName,
-      })
-    })
-  }, [profileData, alterationData]);
+    const {
+      alterations,
+      dataset,
+      profileName,
+    } = queryString.parse(location.search);
 
-  useEffect( () => {
-    setInitValues(queryString.parse(location.search))
+    if (alterations){
+      if (typeof alterations !== typeof []){
+        setSelectedAlterations([ alterations ]);
+      } else {
+        setSelectedAlterations(alterations);
+      }
+    }
+
+    if (profileName){
+      setSelectedProfile(profileName);
+    }
+
+    if (dataset){
+      setSelectedDataset(dataset);
+    }
   }, []);
 
   // Render
+  const selections = {
+    selectedDataset,
+    setSelectedDataset,
+    selectedAlterations,
+    setSelectedAlterations,
+    selectedProfile,
+    setSelectedProfile,
+  };
 
   return (
     <Grid container className={classes.dataExplorer} style={{ height: 'calc(100% - 64px)' }}>
       <DataSelect
-        initValues={initValues}
+        selections={selections}
         setProfileData={setProfileData}
         setAlterationData={setAlterationData}
         setSamplesData={setSamplesData}
-        selectedDataset={selectedDataset}
-        setSelectedDataset={setSelectedDataset}
         datasets={datasets}
       />
       <Explorer {...payload} legend={legend} />

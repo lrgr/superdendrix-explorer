@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { json as d3Json } from 'd3-fetch';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
@@ -37,38 +37,29 @@ const DataSelect = ({
   setProfileData,
   setAlterationData,
   setSamplesData,
-  setSelectedDataset,
-  selectedDataset,
   datasets,
-  initValues,
+  selections,
 }) => {
-  const classes = useStyles()
-
-  // Set initial values for the profiles and alterations
-  const initProfile = initValues.profileName ? initValues.profileName : 'BRAF';
-
-  const initAlterations = useMemo( () => {
-    let parsedAlterations = initValues.alterations
-    if (!parsedAlterations) parsedAlterations = ['KRAS_A']
-    else if (typeof parsedAlterations === 'string') parsedAlterations = [parsedAlterations]
-    return { initAlterations: parsedAlterations };
-  }, [initValues]);
+  const classes = useStyles();
 
   // Handle changing state on the samples file
-  const samplesURL = `${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${selectedDataset}/samples.json`;
+  const { selectedDataset, setSelectedDataset } = selections;
   useEffect(() => {
-    d3Json(samplesURL)
-      .then((jsonData) => {
-        setSamplesData({
-          samples: Object.keys(jsonData.sampleToTissue).sort(),
-          sampleToTissue: jsonData.sampleToTissue,
-          sampleToEssentialScore: jsonData.sampleToEssentialScore,
-          sampleToAlterationCount: jsonData.sampleToAlterationCount,
+    if (selectedDataset !== null){
+      console.log('updating sample data', selectedDataset)
+      d3Json(`${process.env.REACT_APP_SUPERDENDRIX_DATA_URL}/${selectedDataset}/samples.json`)
+        .then((jsonData) => {
+          setSamplesData({
+            samples: Object.keys(jsonData.sampleToTissue).sort(),
+            sampleToTissue: jsonData.sampleToTissue,
+            sampleToEssentialScore: jsonData.sampleToEssentialScore,
+            sampleToAlterationCount: jsonData.sampleToAlterationCount,
+          });
+        }).catch( (error) => {
+          console.error(error)
         })
-      }).catch( (error) => {
-        console.error(error)
-      })
-  }, [selectedDataset, samplesURL, setSamplesData]);
+    }
+  }, [selectedDataset, setSamplesData]);
 
   // Render
   return (
@@ -76,10 +67,10 @@ const DataSelect = ({
       <Typography variant="h5">Select Data</Typography>
       <Grid container>
         <FormControl fullWidth>
-          <InputLabel id="demo-simple-select-label">Dataset</InputLabel>
+          <InputLabel id="dataset-select">Dataset</InputLabel>
           <Select
             labelId="dataset-select"
-            value={selectedDataset}
+            value={datasets.includes(selectedDataset) ? selectedDataset : ''}
             onChange={(e) => setSelectedDataset(e.target.value)}
           >
           {
@@ -90,8 +81,8 @@ const DataSelect = ({
           </Select>
         </FormControl>
       </Grid>
-      <AlterationsSelect {...initAlterations} selectedDataset={selectedDataset} setPayload={setAlterationData} />
-      <ProfileSelect initProfile={initProfile} selectedDataset={selectedDataset} setPayload={setProfileData}  />
+      <AlterationsSelect {...selections} setPayload={setAlterationData} />
+      <ProfileSelect {...selections} setPayload={setProfileData}  />
     </Grid>
   )
 }

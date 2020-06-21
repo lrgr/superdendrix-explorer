@@ -1,22 +1,25 @@
-import React, {useEffect, useMemo, useState, useRef, useCallback} from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
-import {fromPairs, range} from 'lodash'
-import {select, event as d3Event} from 'd3-selection'
-import {brushX} from 'd3-brush'
-import {scaleLinear, scaleBand, scaleLog} from 'd3-scale'
-import {extent, min, max, ascending} from 'd3-array'
-import {axisLeft, axisBottom} from 'd3-axis'
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import Grid from '@material-ui/core/Grid';
+import { fromPairs } from 'lodash';
+import {select, event as d3Event} from 'd3-selection';
+import { brushX } from 'd3-brush';
+import { scaleLinear, scaleBand } from 'd3-scale';
+import { extent, max, ascending } from 'd3-array';
+import { axisLeft } from 'd3-axis';
 
-import AlterationTooltip from './AlterationTooltip.js'
-import './style.css'
-import {fieldSorter} from '../../../helpers.js'
-import {ASCENDING, DESCENDING, NO_SORT} from '../../../constants.js'
+import AlterationTooltip from './AlterationTooltip.js';
+import './style.css';
+import { fieldSorter } from '../../../helpers.js';
+import { ASCENDING, NO_SORT } from '../../../constants.js';
 
 // Constants
-const margin = { left: 100, top: 10, right: 30, bottom: 30}
-const paddingInner = 0
+const margin = {
+  left: 100,
+  top: 10,
+  right: 30,
+  bottom: 30
+};
+const paddingInner = 0;
 
 const Chart = ({
   alterations,
@@ -44,11 +47,12 @@ const Chart = ({
   // CHART COMPUTATION
   //////////////////////////////////////////////////////////////////////////////
   // Data preprocessing
-  const width = useMemo( () => containerWidth - margin.left - margin.right, [containerWidth])
-  const samples = useMemo( () => Object.keys(scores), [scores])
-  const values = useMemo( () => samples.map( s => scores[s] ), [scores, samples])
-  const events = useMemo( () => Object.keys(alterations), [alterations])
-  const alterationCounts = useMemo( () => samples.map(s => sampleToAlterationCount[s] ), [samples, sampleToAlterationCount])
+  const width = useMemo(() => containerWidth - margin.left - margin.right, [containerWidth]);
+  const samples = useMemo(() => Object.keys(scores), [scores]);
+  const values = useMemo(() => samples.map( s => scores[s]), [scores, samples]);
+  const events = useMemo(() => Object.keys(alterations), [alterations]);
+  const alterationCounts = useMemo(() => samples.map(s => sampleToAlterationCount[s]).map((c) => c ? c : 1), [samples, sampleToAlterationCount]);
+  const maxAlterationCount = useMemo(() => max(alterationCounts), [alterationCounts]);
 
   const alterationMap = useMemo( () => (
     fromPairs(
@@ -84,8 +88,8 @@ const Chart = ({
         score: scores[s],
         tissue: sampleToTissue[s],
         alterations: alterationIndex,
-      }
-    })
+      };
+    });
 
     // Do some custom sorting, always sorting by sample at the end
     const fields = [ ]
@@ -111,17 +115,18 @@ const Chart = ({
 
   const brushXScale = useMemo( () => (
     scaleBand().domain(sortedSamples).range([0, width]).paddingInner(paddingInner)
-  ), [sortedSamples, width])
+  ), [sortedSamples, width]);
   const brushYScale = useMemo( () => (
-    scaleLinear().domain([1, max(alterationCounts)+1]).range([brushHeight, 0])
-  ), [alterationCounts])
+    scaleLinear().domain([1, maxAlterationCount+1]).range([brushHeight, 0])
+  ), [maxAlterationCount]);
 
   const barXScale = useMemo( () => {
     return scaleBand().domain(visibleSamples).range([0, width]).paddingInner(paddingInner)
   }, [visibleSamples, width]);
-  const barYScale = useMemo( () => (
-    scaleLinear().domain(extent(values)).range([barHeight, 0])
-  ), [values, barHeight]);
+  const barYScale = useMemo( () => {
+    const domain = samples.length === 0 ? [-100, 100] : extent(values);
+    return scaleLinear().domain(domain).range([barHeight, 0])
+  }, [samples, values, barHeight]);
 
   //////////////////////////////////////////////////////////////////////////////
   // THRESHOLD SCORE LOGIC
@@ -157,7 +162,7 @@ const Chart = ({
       return 0.2
     }
     return 1;
-  }, [thresholdScore, legend.sort]);
+  }, [legend.sort, thresholdXIndex]);
 
   //////////////////////////////////////////////////////////////////////////////
   // EFFECTS
@@ -177,7 +182,7 @@ const Chart = ({
       } else { // reset
         setVisibleSamples(sortedSamples)
       }
-    })
+    });
 
     select(el).on('click', () => {
       select(el).call(brush.move, null) // reset on click
@@ -188,7 +193,7 @@ const Chart = ({
     select(el).call(brush.move, null) // reset on click
 
     return () => select(el).on(".brush", null) // destruct
-  }, [samples, sortedSamples, width])
+  }, [brushXScale, samples, sortedSamples, width]);
 
 
   // Add axes
@@ -211,7 +216,10 @@ const Chart = ({
      return () => {
        window.removeEventListener('resize', handleResize)
      }
-   })
+   });
+
+   // Change the data
+   useEffect(() => setHighlightedSample(null), [samples, alterations]);
 
    //////////////////////////////////////////////////////////////////////////////
    // EVENT HANDLERS
@@ -227,10 +235,10 @@ const Chart = ({
    // HELPERS
    //////////////////////////////////////////////////////////////////////////////
    const sampleFill = useCallback( (s) => {
-     const sampleAlterations = sampleToAlterations[s]
-     if (sampleAlterations.length === 0) return 'lightgray'
-     else if (sampleAlterations.length > 1) return 'black'
-     else return legend.eventColors[sampleAlterations[0]]
+     const sampleAlterations = sampleToAlterations[s] || [];
+     if (sampleAlterations.length === 0) return 'lightgray';
+     else if (sampleAlterations.length > 1) return 'black';
+     else return legend.eventColors[sampleAlterations[0]];
    }, [legend, sampleToAlterations]);
 
    const sampleOpacity = useCallback((s) => {
@@ -314,13 +322,13 @@ const Chart = ({
           />
           <g id="Bars">
             {
-              visibleSamples.map( s => (
+              visibleSamples.map(s => (
                 <rect
                   key={s}
                   x={barXScale(s)}
-                  y={barYScale(Math.max(0, scores[s]))}
+                  y={barYScale(Math.max(0, scores[s] ? scores[s] : 0))}
                   width={barXScale.bandwidth()}
-                  height={Math.abs(barYScale(scores[s]) - barYScale(0))}
+                  height={Math.abs(barYScale(scores[s] ? scores[s] : 0) - barYScale(0))}
                   fillOpacity={sampleOpacity(s)}
                   fill={sampleFill(s)}
                   onMouseEnter={(e) => handleMouseEnter(e, s)}
@@ -357,7 +365,7 @@ const Chart = ({
           />
         }
     </Grid>
-  )
-}
+  );
+};
 
-export default Chart
+export default Chart;

@@ -1,12 +1,12 @@
-import React, {useState, useEffect, useRef} from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
-import Box from '@material-ui/core/Box'
-import Popover from '@material-ui/core/Popover'
+import React from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Box from '@material-ui/core/Box';
+import Popover from '@material-ui/core/Popover';
 
 const useStyles = makeStyles(theme => ({
   popover: {
@@ -83,7 +83,7 @@ const AlterationTooltip = ({
         </Table>
       </Box>
     </Popover>
-  )
-}
+  );
+};
 
-export default AlterationTooltip
+export default AlterationTooltip;
